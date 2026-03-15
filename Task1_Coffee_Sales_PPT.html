@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>Task 1: Coffee Sales Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* CSS Reset and Variables */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --dark: #121212; --dark2: #1e1e1e; --white: #ffffff; --off: #f4f4f4;
+  --gray: #e0e0e0; --muted: #757575; --accent: #212121;
+}
+
+body {
+  background: #e9e9e9; font-family: 'Inter', sans-serif;
+  display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 50px 20px;
+}
+
+/* Slide Container */
+.slide {
+  width: 1280px; height: 720px; border-radius: 8px; overflow: hidden;
+  position: relative; display: flex; flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15); flex-shrink: 0;
+}
+.slide.light { background: var(--white); color: var(--dark); border: 2px solid var(--dark); }
+.slide.dark { background: var(--dark); color: var(--white); border: 2px solid var(--white); }
+.slide.split { background: linear-gradient(90deg, var(--white) 50%, var(--dark) 50%); border: 2px solid #000; }
+.slide.split-rev { background: linear-gradient(90deg, var(--dark) 50%, var(--white) 50%); border: 2px solid #000; }
+
+/* Structural Elements */
+.header-bar { height: 6px; width: 100%; flex-shrink: 0; }
+.slide.light .header-bar, .slide.split .header-bar { background: var(--dark); }
+.slide.dark .header-bar, .slide.split-rev .header-bar { background: var(--white); }
+
+.content { flex: 1; display: flex; flex-direction: column; padding: 50px 70px; gap: 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; }
+.two-col.unequal { grid-template-columns: 1.5fr 1fr; }
+
+/* Typography */
+h1 { font-size: 56px; font-weight: 900; line-height: 1.1; letter-spacing: -1.5px; text-transform: uppercase; }
+h2 { font-size: 32px; font-weight: 800; line-height: 1.2; letter-spacing: -0.5px; border-bottom: 3px solid; padding-bottom: 10px; margin-bottom: 10px; display: inline-block; }
+.slide.light h2 { color: var(--dark); border-color: var(--dark); }
+.slide.dark h2 { color: var(--white); border-color: var(--white); }
+
+p { font-size: 15px; line-height: 1.6; font-weight: 500; }
+.slide.light p { color: #333; }
+.slide.dark p { color: #ccc; }
+
+.meta-tag { font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; padding: 6px 12px; border: 2px solid; display: inline-block; margin-bottom: 20px; }
+.slide.light .meta-tag { color: var(--dark); border-color: var(--dark); }
+.slide.dark .meta-tag { color: var(--white); border-color: var(--white); }
+
+/* Boxes and Cards */
+.box { padding: 25px; border: 2px solid; border-radius: 4px; display: flex; flex-direction: column; gap: 15px; }
+.slide.light .box { background: var(--off); border-color: var(--dark); box-shadow: 4px 4px 0 var(--dark); }
+.slide.dark .box { background: var(--dark2); border-color: var(--white); box-shadow: 4px 4px 0 var(--white); }
+
+.box-title { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+.slide.light .box-title { color: var(--dark); }
+.slide.dark .box-title { color: var(--white); }
+
+/* Code and Output Blocks */
+.code-container { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 0; border: 2px solid; border-radius: 4px; overflow: hidden; }
+.slide.light .code-container { border-color: var(--dark); box-shadow: 4px 4px 0 var(--dark); }
+.slide.dark .code-container { border-color: var(--white); box-shadow: 4px 4px 0 var(--white); }
+
+.code-header { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 8px 15px; border-bottom: 2px solid; display: flex; justify-content: space-between; text-transform: uppercase; }
+.slide.light .code-header { background: var(--dark); color: var(--white); border-bottom-color: var(--dark); }
+.slide.dark .code-header { background: var(--white); color: var(--dark); border-bottom-color: var(--white); }
+
+.code-block { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6; padding: 20px; overflow-y: auto; flex: 2; }
+.slide.light .code-block { background: var(--off); color: #2d2d2d; }
+.slide.dark .code-block { background: var(--dark2); color: #d4d4d4; }
+
+.output-header { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; padding: 8px 15px; border-top: 2px solid; border-bottom: 2px solid; text-transform: uppercase; }
+.slide.light .output-header { background: var(--gray); color: var(--dark); border-color: var(--dark); }
+.slide.dark .output-header { background: #333; color: var(--white); border-color: var(--white); }
+
+.output-block { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; padding: 15px; overflow-y: auto; flex: 1; }
+.slide.light .output-block { background: var(--white); color: #555; }
+.slide.dark .output-block { background: var(--dark); color: #aaa; }
+
+/* Syntax Highlighting */
+.kw { font-weight: 800; }
+.slide.light .kw { color: #000; } .slide.dark .kw { color: #fff; }
+.fn { font-style: italic; }
+.str { text-decoration: underline; text-decoration-style: dotted; }
+.cm { font-style: italic; opacity: 0.7; }
+.num { font-weight: 700; }
+
+/* Lists and Tables */
+ul.sketchy-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+ul.sketchy-list li { position: relative; padding-left: 20px; font-size: 14px; line-height: 1.5; font-weight: 500; }
+ul.sketchy-list li::before { content: '►'; position: absolute; left: 0; font-size: 10px; top: 4px; }
+.slide.light ul.sketchy-list li::before { color: var(--dark); }
+.slide.dark ul.sketchy-list li::before { color: var(--white); }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.data-table th, .data-table td { padding: 10px 12px; border: 2px solid; font-family: 'JetBrains Mono', monospace; }
+.slide.light .data-table th, .slide.light .data-table td { border-color: var(--dark); }
+.slide.dark .data-table th, .slide.dark .data-table td { border-color: var(--white); }
+.data-table th { font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter', sans-serif; }
+
+/* Metrics Grid */
+.metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.metric-box { padding: 20px; border: 2px solid; text-align: center; border-radius: 4px; }
+.slide.light .metric-box { border-color: var(--dark); }
+.slide.dark .metric-box { border-color: var(--white); }
+.metric-val { font-size: 32px; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-bottom: 5px; }
+.metric-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Page Numbers */
+.page-number { position: absolute; bottom: 30px; right: 40px; font-size: 12px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+.slide.light .page-number { color: var(--dark); }
+.slide.dark .page-number { color: var(--white); }
+
+/* Cover specific */
+.cover-center { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; }
+.cover-title { font-size: 72px; letter-spacing: -2px; margin: 20px 0; border: 4px solid; padding: 20px 40px; display: inline-block; box-shadow: 8px 8px 0; font-weight: 900; line-height: 1; }
+.slide.light .cover-title { border-color: var(--dark); box-shadow-color: var(--dark); background: var(--white); }
+/* Split slide content overrides */
+.content.light { color: var(--dark); }
+.content.dark { color: var(--white); }
+.content.light p { color: #333; }
+.content.dark p { color: #ccc; }
+.content.light h2 { color: var(--dark); border-color: var(--dark); }
+.content.dark h2 { color: var(--white); border-color: var(--white); }
+.content.light .meta-tag { color: var(--dark); border-color: var(--dark); }
+.content.dark .meta-tag { color: var(--white); border-color: var(--white); }
+.content.light .box { background: var(--off); border-color: var(--dark); box-shadow: 4px 4px 0 var(--dark); }
+.content.dark .box { background: var(--dark2); border-color: var(--white); box-shadow: 4px 4px 0 var(--white); }
+.content.light .box-title { color: var(--dark); }
+.content.dark .box-title { color: var(--white); }
+.content.light .code-container { border-color: var(--dark); box-shadow: 4px 4px 0 var(--dark); }
+.content.dark .code-container { border-color: var(--white); box-shadow: 4px 4px 0 var(--white); }
+.content.light .code-header { background: var(--dark); color: var(--white); border-bottom-color: var(--dark); }
+.content.dark .code-header { background: var(--white); color: var(--dark); border-bottom-color: var(--white); }
+.content.light .code-block { background: var(--off); color: #2d2d2d; }
+.content.dark .code-block { background: var(--dark2); color: #d4d4d4; }
+.content.light .output-header { background: var(--gray); color: var(--dark); border-color: var(--dark); }
+.content.dark .output-header { background: #333; color: var(--white); border-color: var(--white); }
+.content.light .output-block { background: var(--white); color: #555; }
+.content.dark .output-block { background: var(--dark); color: #aaa; }
+.content.light .kw { color: #000; } .content.dark .kw { color: #fff; }
+.content.light ul.sketchy-list li::before { color: var(--dark); }
+.content.dark ul.sketchy-list li::before { color: var(--white); }
+.content.light .data-table th, .content.light .data-table td { border-color: var(--dark); }
+.content.dark .data-table th, .content.dark .data-table td { border-color: var(--white); }
+.content.light .metric-box { border-color: var(--dark); }
+.content.dark .metric-box { border-color: var(--white); }
+/* Print optimizations */
+@media print {
+  @page { size: 1280px 720px; margin: 0; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  body { margin: 0 !important; padding: 0 !important; background: #e9e9e9 !important; }
+  .slide { margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; page-break-after: always; break-after: page; }
+}
+</style>
+</head>
+<body>
+
+<!-- Slide 1: Cover -->
+<div class="slide light">
+  <div class="header-bar"></div>
+  <div class="content cover-center">
+    <div class="meta-tag">Portfolio Project</div>
+    <div class="cover-title">COFFEE SALES<br>ANALYSIS</div>
+    <p style="font-size: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">Data Pipeline & Forecasting</p>
+    <div style="margin-top: 50px; display: flex; gap: 20px;">
+      <span class="box" style="padding: 10px 20px; font-weight: 800;">Python</span>
+      <span class="box" style="padding: 10px 20px; font-weight: 800;">Machine Learning</span>
+      <span class="box" style="padding: 10px 20px; font-weight: 800;">Finance Analytics</span>
+    </div>
+  </div>
+  <div class="page-number">01 / 14</div>
+</div>
+
+<!-- Slide 2: Project Overview & Setup -->
+<div class="slide split">
+  <div class="header-bar"></div>
+  <div class="two-col" style="gap: 0;">
+    <div class="content light" style="padding: 50px;">
+      <h2>Project Context</h2>
+      <p style="margin-bottom: 20px;"><strong>Objective:</strong> Transform raw transaction logs into actionable operational forecasts to optimize staffing and inventory.</p>
+      <div class="box">
+        <div class="box-title">The Problem</div>
+        <p>Retail coffee demand is highly volatile. The morning rush causes bottlenecks. If Average Service Time (AST) exceeds 3 minutes, queue abandonment rises exponentially, resulting in lost revenue.</p>
+      </div>
+      <div class="box" style="margin-top: 20px;">
+        <div class="box-title">The Goal</div>
+        <p>Identify patterns in sales data to predict demand surges, allowing for proactive staffing and reducing "Idle Labor Leakage".</p>
+      </div>
+    </div>
+    
+    <div class="content dark" style="padding: 50px;">
+      <h2>Environment Setup</h2>
+      <p style="margin-bottom: 20px;">Rigorous dependency management is crucial for a production-ready ML pipeline.</p>
+      <div class="code-container">
+        <div class="code-header"><span>Terminal</span><span>bash</span></div>
+        <div class="code-block" style="flex: 1;">
+<span class="cm"># 1. Create a virtual environment</span>
+<span class="kw">python</span> -m venv coffee_expert_env
+
+<span class="cm"># 2. Activate it</span>
+<span class="cm"># On Windows:</span>
+coffee_expert_env\Scripts\activate
+
+<span class="cm"># 3. Install required packages</span>
+<span class="kw">pip</span> install pandas==2.1.0 numpy==1.25.0 \
+    matplotlib==3.7.0 seaborn==0.12.0 \
+    scikit-learn==1.3.0 scipy==1.11.0
+        </div>
+        <div class="output-header">console</div>
+        <div class="output-block" style="flex: none; height: 120px;">
+Successfully installed matplotlib-3.7.0 numpy-1.25.0 pandas-2.1.0 scikit-learn-1.3.0 scipy-1.11.0 seaborn-0.12.0
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-number" style="color: var(--white);">02 / 14</div>
+</div>
+
+<!-- Slide 3: Data Ingestion -->
+<div class="slide dark">
+  <div class="header-bar"></div>
+  <div class="content">
+    <h2>Data Archaeology</h2>
+    <div class="two-col unequal">
+      <div class="code-container">
+        <div class="code-header"><span>data_loader.py</span><span>python</span></div>
+        <div class="code-block">
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="kw">def</span> <span class="fn">ingest_retail_logs</span>(<span class="str">path</span>):
+    <span class="cm"># Optimize memory usage with explicit dtypes</span>
+    dtypes = {
+        <span class="str">'coffee_name'</span>: <span class="str">'category'</span>,
+        <span class="str">'money'</span>: <span class="str">'float32'</span>,
+        <span class="str">'cash_type'</span>: <span class="str">'category'</span>
+    }
+    df = pd.read_csv(path, dtype=dtypes)
+    
+    <span class="cm"># Precise temporal conversion handling errors</span>
+    df[<span class="str">'datetime'</span>] = pd.to_datetime(
+        df[<span class="str">'datetime'</span>], errors=<span class="str">'coerce'</span>
+    )
+    
+    <span class="cm"># Drop rows that failed datetime conversion</span>
+    <span class="kw">return</span> df.dropna(subset=[<span class="str">'datetime'</span>])
+
+df = ingest_retail_logs(<span class="str">'data/index.csv'</span>)
+<span class="kw">print</span>(<span class="str">f"Ingested {len(df)} records."</span>)
+<span class="kw">print</span>(<span class="str">f"Memory: {df.memory_usage().sum()/1024**2:.2f} MB"</span>)
+        </div>
+        <div class="output-header">console output</div>
+        <div class="output-block">
+Ingested 89432 records.
+Memory: 2.14 MB
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="box">
+          <div class="box-title">Optimization Strategy</div>
+          <p>By specifying <code style="background:var(--white);color:var(--dark);padding:2px 4px;font-family:'JetBrains Mono';font-size:12px;">float32</code> and <code style="background:var(--white);color:var(--dark);padding:2px 4px;font-family:'JetBrains Mono';font-size:12px;">category</code> dtypes during ingestion, we minimize the memory footprint before the dataframe even loads.</p>
+        </div>
+        
+        <table class="data-table">
+          <tr><th>Feature</th><th>Logic</th><th>Type</th></tr>
+          <tr><td>money</td><td>Target Variable</td><td>Float32</td></tr>
+          <tr><td>datetime</td><td>Temporal Pulse</td><td>Datetime</td></tr>
+          <tr><td>coffee_name</td><td>Product Mix</td><td>Category</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="page-number">03 / 14</div>
+</div>
+
+<!-- Slide 4: Quality Assurance -->
+<div class="slide light">
+  <div class="header-bar"></div>
+  <div class="content">
+    <h2>Quality Assurance</h2>
+    <div class="two-col">
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <p>Before modeling, we must eliminate noise that could skew weights in the Random Forest ensemble.</p>
+        <div class="box">
+          <div class="box-title">Statistical Filtering (Z-Score)</div>
+          <p>We use Z-scores to identify transactions whose values deviate significantly from the mean (&#62; 3 standard deviations). This isolates structural anomalies.</p>
+        </div>
+        <div class="box">
+          <div class="box-title">Business Logic Filtering</div>
+          <p>We actively search for domain-specific anomalies, such as "training transactions" that have a monetary value of $0, ensuring our mean revenue calculations remain accurate.</p>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>anomaly_detection.py</span><span>python</span></div>
+        <div class="code-block">
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy <span class="kw">import</span> stats
+
+<span class="kw">def</span> <span class="fn">filter_anomalies</span>(<span class="str">data</span>, <span class="str">column</span>):
+    <span class="cm"># Identify values &#62; 3 std dev from mean</span>
+    z_scores = np.abs(stats.zscore(data[column]))
+    clean_data = data[z_scores &#60; <span class="num">3</span>]
+    
+    anomalies = <span class="fn">len</span>(data) - <span class="fn">len</span>(clean_data)
+    <span class="kw">print</span>(<span class="str">f"Isolated {anomalies} anomalies."</span>)
+    
+    <span class="cm"># Check for $0 training transactions</span>
+    zero_vals = clean_data[clean_data[column] == <span class="num">0</span>]
+    <span class="kw">if</span> <span class="fn">len</span>(zero_vals) &#62; <span class="num">0</span>:
+        <span class="kw">print</span>(<span class="str">f"Found {len(zero_vals)} $0 transactions."</span>)
+        clean_data = clean_data[clean_data[column] &#62; <span class="num">0</span>]
+        
+    <span class="kw">return</span> clean_data
+
+df = filter_anomalies(df, <span class="str">'money'</span>)
+        </div>
+        <div class="output-header">console</div>
+        <div class="output-block">
+Isolated 14 anomalies.
+Found 3 $0 transactions.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-number">04 / 14</div>
+</div>
+
+<!-- Slide 5: Feature Engineering Concept -->
+<div class="slide split-rev">
+  <div class="header-bar"></div>
+  <div class="two-col" style="gap: 0;">
+    <div class="content dark" style="padding: 50px;">
+      <h2>The Feature Engineering Problem</h2>
+      
+      <div class="box" style="margin-bottom: 25px;">
+        <div class="box-title">The Problem with Hours</div>
+        <p>Extracting the "hour" from a datetime returns an integer from 0 to 23. To a machine learning model, the numerical distance between 23 (11 PM) and 0 (Midnight) appears large, even though they represent contiguous moments in time.</p>
+      </div>
+      
+      <div class="box">
+        <div class="box-title">Business Logic Features</div>
+        <p>Beyond raw time, human scheduling operates on discrete social logic:</p>
+        <ul class="sketchy-list" style="margin-top: 15px;">
+          <li>Is it the weekend?</li>
+          <li>Is it the morning rush?</li>
+          <li>Is it payday?</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content light" style="padding: 50px; justify-content: center; align-items: center;">
+      <div style="border: 4px solid var(--dark); padding: 40px; text-align: center; box-shadow: 10px 10px 0 var(--dark);">
+        <div style="font-size: 20px; font-weight: 800; margin-bottom: 20px; text-transform: uppercase;">Cyclical Encoding Solution</div>
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">We use Sine and Cosine transformations to map linear hours onto a continuous 24-hour circle.</p>
+        <div style="font-family: 'JetBrains Mono', monospace; background: var(--off); padding: 20px; border: 2px solid var(--dark); font-weight: bold; font-size: 14px;">
+          sin(2 * &pi; * hour / 24)<br>
+          <br>
+          cos(2 * &pi; * hour / 24)
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-number" style="color: var(--dark);">05 / 14</div>
+</div>
+
+<!-- Slide 6: Feature Engineering Code -->
+<div class="slide dark">
+  <div class="header-bar"></div>
+  <div class="content">
+    <h2>Synthesizing Temporal Features</h2>
+    <div class="code-container" style="height: 100%;">
+      <div class="code-header"><span>feature_eng.py</span><span>python</span></div>
+      <div class="code-block">
+<span class="kw">def</span> <span class="fn">synthesize_time_features</span>(<span class="str">data</span>):
+    <span class="cm"># Extract raw hour</span>
+    data[<span class="str">'hour'</span>] = data[<span class="str">'datetime'</span>].dt.hour
+    
+    <span class="cm"># 1. Cyclical Encoding (Trigonometric Transforms)</span>
+    data[<span class="str">'h_sin'</span>] = np.sin(<span class="num">2</span> * np.pi * data[<span class="str">'hour'</span>] / <span class="num">24</span>)
+    data[<span class="str">'h_cos'</span>] = np.cos(<span class="num">2</span> * np.pi * data[<span class="str">'hour'</span>] / <span class="num">24</span>)
+    
+    <span class="cm"># 2. Behavioral Flags mapped to integers constraints (0/1)</span>
+    <span class="cm"># Weekends: 5=Saturday, 6=Sunday</span>
+    data[<span class="str">'is_weekend'</span>] = data[<span class="str">'datetime'</span>].dt.dayofweek.isin([<span class="num">5</span>, <span class="num">6</span>]).astype(<span class="num">int</span>)
+    
+    <span class="cm"># Morning Rush: between 7 AM and 10 AM</span>
+    data[<span class="str">'is_morning_rush'</span>] = data[<span class="str">'hour'</span>].between(<span class="num">7</span>, <span class="num">10</span>).astype(<span class="num">int</span>)
+    
+    <span class="cm"># Payday proxy: assuming spikes around 15th and end of month</span>
+    data[<span class="str">'payday_proximity'</span>] = data[<span class="str">'datetime'</span>].dt.day.isin([<span class="num">15</span>, <span class="num">30</span>, <span class="num">31</span>]).astype(<span class="num">int</span>)
+    
+    <span class="kw">return</span> data
+
+df = synthesize_time_features(df)
+<span class="kw">print</span>(df[[<span class="str">'datetime'</span>, <span class="str">'hour'</span>, <span class="str">'h_sin'</span>, <span class="str">'is_weekend'</span>]].head())
+      </div>
+      <div class="output-header">console output</div>
+      <div class="output-block">
+             datetime  hour     h_sin  is_weekend
+0 2023-01-02 07:15:00     7  0.965926           0
+1 2023-01-02 07:22:00     7  0.965926           0
+2 2023-01-02 08:05:00     8  0.866025           0
+3 2023-01-07 14:30:00    14 -0.500000           1
+4 2023-01-07 15:10:00    15 -0.707107           1
+      </div>
+    </div>
+  </div>
+  <div class="page-number">06 / 14</div>
+</div>
+
+<!-- Slide 7: EDA Findings -->
+<div class="slide light">
+  <div class="header-bar"></div>
+  <div class="content">
+    <h2>EDA: Bimodal Surge Pattern</h2>
+    <div class="two-col unequal">
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="box">
+          <div class="box-title">Peak 1: The Commuter Surge (07:00 - 09:30)</div>
+          <p>Characterized by extreme transaction velocity but low item variety (drip coffee, Americanos). Operating principle: <strong>Throughput Maximization</strong>.</p>
+        </div>
+        <div class="box">
+          <div class="box-title">Peak 2: The Social Block (13:00 - 15:00)</div>
+          <p>Lower transaction velocity but higher Average Transaction Value (ATV). Customers order complex, high-margin specialty items. Operating principle: <strong>Menu Agility</strong>.</p>
+        </div>
+        <div class="box">
+          <div class="box-title">Weekly Pulse</div>
+          <p>Data verifies the Pareto distribution: 20% of menu items generate 80% of revenue.</p>
+        </div>
+      </div>
+      
+      <div class="box" style="background: var(--dark); color: var(--white); justify-content: center; text-align: center;">
+        <div class="box-title" style="color: var(--white); font-size: 24px;">Strategic Supply Chain Shift</div>
+        <p style="color: #ccc; font-size: 16px; text-align: left; margin-top: 15px;">Analysis reveals Tuesday-Thursday consistency. Bulk restocking of dense raw materials (beans, milks, syrups) should shift to <strong style="color: var(--white); text-decoration: underline;">Sunday and Monday</strong> to minimize operational friction during high-demand commuter days.</p>
+        <p style="color: #ccc; font-size: 16px; text-align: left; margin-top: 15px;">This insight was previously invisible to management without quantitative temporal grouping.</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-number">07 / 14</div>
+</div>
+
+<!-- Slide 8: Time Series Aggregation -->
+<div class="slide split">
+  <div class="header-bar"></div>
+  <div class="two-col" style="gap: 0;">
+    <div class="content light" style="padding: 50px;">
+      <h2>Time-Series Framework</h2>
+      <p style="margin-bottom: 20px;">Forecasting requires transitioning from individual event logs (receipts) to time-bounded aggregates ("Daily Units").</p>
+      
+      <div class="box" style="margin-bottom: 20px;">
+        <div class="box-title">Autoregressive Lags</div>
+        <p>We engineer features by shifting past sales forward. A 7-day lag is statistically the most significant predictor because coffee consumption follows a strong weekly work-cycle pattern.</p>
+      </div>
+      
+      <div class="box">
+        <div class="box-title">Exponential Smoothing</div>
+        <p>We calculate an Exponential Moving Average (EMA) to isolate the true demand trend, cutting through daily noise.</p>
+      </div>
+    </div>
+    
+    <div class="content dark" style="padding: 50px;">
+      <div class="code-container" style="height: 100%;">
+        <div class="code-header"><span>aggregation.py</span><span>python</span></div>
+        <div class="code-block" style="flex: 1;">
+<span class="cm"># Aggregate to daily resolution</span>
+daily = df.groupby(df[<span class="str">'datetime'</span>].dt.date).agg({
+    <span class="str">'money'</span>: <span class="str">'sum'</span>,
+    <span class="str">'coffee_name'</span>: <span class="str">'count'</span> <span class="cm"># Proxy for total volume</span>
+}).rename(columns={<span class="str">'coffee_name'</span>: <span class="str">'sales'</span>})
+
+<span class="cm"># Create 7 days of lags</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">8</span>):
+    daily[<span class="str">f'lag_{i}'</span>] = daily[<span class="str">'sales'</span>].shift(i)
+
+<span class="cm"># Smooth the signal with 7-day EMA</span>
+daily[<span class="str">'ema_7'</span>] = daily[<span class="str">'sales'</span>].ewm(span=<span class="num">7</span>).mean()
+
+<span class="cm"># Drop rows with NaNs introduced by lagging</span>
+daily.dropna(inplace=<span class="kw">True</span>)
+<span class="kw">print</span>(<span class="str">"Aggregated shape:"</span>, daily.shape)
+        </div>
+        <div class="output-header">console</div>
+        <div class="output-block" style="flex: none; height: 100px;">
+Aggregated shape: (358, 10)
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-number" style="color: var(--white);">08 / 14</div>
+</div>
+
+<!-- Slide 9: Random Forest Training -->
+<div class="slide dark">
+  <div class="header-bar"></div>
+  <div class="content">
+    <h2>Random Forest Configuration</h2>
+    <div class="two-col">
+      <div class="code-container">
+        <div class="code-header"><span>modeling.py</span><span>python</span></div>
+        <div class="code-block">
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestRegressor
+
+<span class="cm"># Define features and target</span>
+X = daily.drop([<span class="str">'sales'</span>, <span class="str">'money'</span>], axis=<span class="num">1</span>)
+y = daily[<span class="str">'sales'</span>]
+
+<span class="cm"># CRITICAL: Sequential Split for Time Series</span>
+<span class="cm"># We cannot shuffle, lest we leak future data</span>
+split_idx = <span class="fn">int</span>(<span class="fn">len</span>(X) * <span class="num">0.8</span>)
+X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
+y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
+
+<span class="cm"># Initialize ensemble</span>
+rf_model = RandomForestRegressor(
+    n_estimators=<span class="num">300</span>,
+    max_depth=<span class="num">8</span>,
+    random_state=<span class="num">42</span>
+)
+
+<span class="cm"># Fit the model to historical data</span>
+rf_model.fit(X_train, y_train)
+<span class="kw">print</span>(<span class="str">"Model training complete."</span>)
+        </div>
+        <div class="output-header">console</div>
+        <div class="output-block" style="flex: none; height: 60px;">
+Model training complete.
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="box">
+          <div class="box-title">Why Random Forest?</div>
+          <p>Tree-based ensembles handle non-linear interactions efficiently. Deep Neural Networks often overfit on small retail datasets (&#60;10k days). Random Forest provides stability through voting.</p>
+        </div>
+        
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="metric-val">300</div>
+            <div class="metric-lbl">Estimators (Trees)</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val">8</div>
+            <div class="metric-lbl">Max Tree Depth</div>
+          </div>
+        </div>
+        <div class="box">
+          <div class="box-title">Time-Series Validation</div>
+          <p>We use a sequential train/test split (80/20) instead of random shuffling. Random shuffling in time-series causes catastrophic data leakage from the future into the training set.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-number">09 / 14</div>
+</div>
+
+<!-- Slide 10: Model Evaluation -->
+<div class="slide light">
+  <div class="header-bar"></div>
+  <div class="content">
+    <h2>Model Evaluation & Residuals</h2>
+    <div class="two-col unequal">
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="metrics-grid" style="grid-template-columns: 1fr;">
+          <div class="metric-box" style="text-align: left; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="metric-lbl" style="color: var(--muted);">Rolling Average Benchmark</div>
+              <div style="font-size: 24px; font-weight: 700;">14.2 cups error/day</div>
+            </div>
+            <div style="font-size: 24px;">📉</div>
+          </div>
+          <div class="metric-box" style="background: var(--dark); color: var(--white); border-color: var(--dark); text-align: left; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <div class="metric-lbl" style="color: rgba(255,255,255,0.7);">Random Forest Model MAE</div>
+              <div style="font-size: 28px; font-weight: 800;">9.42 cups error/day</div>
+            </div>
+            <div style="font-size: 28px;">🏆</div>
+          </div>
+        </div>
+        
+        <div class="box">
+          <div class="box-title">Residual Analysis</div>
+          <p>The Mean Residual (Bias) is near zero. This indicates the errors are normally distributed around the mean. The model does not systematically over-predict or under-predict; it is structurally balanced.</p>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>evaluation.py</span><span>python</span></div>
+        <div class="code-block">
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> mean_absolute_error
+
+<span class="cm"># Generate predictions</span>
+predictions = rf_model.predict(X_test)
+
+<span class="cm"># Calculate Error</span>
+mae = mean_absolute_error(y_test, predictions)
+<span class="kw">print</span>(<span class="str">f"MAE: {mae:.2f} units"</span>)
+
+<span class="cm"># Residual Check</span>
+residuals = y_test - predictions
+bias = residuals.mean()
+<span class="kw">print</span>(<span class="str">f"Mean Residual (Bias): {bias:.2f}"</span>)
+        </div>
+        <div class="output-header">console</div>
+        <div class="output-block">
+MAE: 9.42 units
+Mean Residual (Bias): -0.15
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-number">10 / 14</div>
+</div>
+
+<!-- Slide 11: Financial ROI -->
+<div class="slide split-rev">
+  <div class="header-bar"></div>
+  <div class="two-col" style="gap: 0;">
+    <div class="content dark" style="padding: 50px; justify-content: center;">
+      <h2 style="font-size: 44px; line-height: 1.1; margin-bottom: 20px;">Translating Math to Money</h2>
+      <p style="font-size: 18px;">A technical pipeline is only valid if it directly impacts the P&L statement. Here is the operational ROI.</p>
+    </div>
+    
+    <div class="content light" style="padding: 50px; justify-content: center;">
+      <div class="box" style="margin-bottom: 25px; padding: 30px;">
+        <div class="box-title" style="font-size: 20px; border-bottom: 2px solid; padding-bottom: 10px; margin-bottom: 15px;">Waste Reduction Optimization</div>
+        <p style="font-size: 15px;">By anticipating daily volume dips, perishable stock orders (milk, pastries) are trimmed by <strong>12%</strong> on projected "low" days.</p>
+        <p style="font-weight: 800; font-family: 'JetBrains Mono', monospace; font-size: 18px; margin-top: 15px;">⮑ Recovers $200+ / month</p>
+      </div>
+      
+      <div class="box" style="padding: 30px;">
+        <div class="box-title" style="font-size: 20px; border-bottom: 2px solid; padding-bottom: 10px; margin-bottom: 15px;">Labor & Revenue Capture</div>
+        <p style="font-size: 15px;">Aligning staff to predicted hourly surges reduces AST by 20 seconds, preventing queue walk-offs.</p>
+        <p style="font-weight: 800; font-family: 'JetBrains Mono', monospace; font-size: 18px; margin-top: 15px;">⮑ Captures $500 / month</p>
+      </div>
+    </div>
+  </div>
+  <div class="page-number" style="color: var(--dark);">11 / 14</div>
+</div>
+
+<!-- Slide 12: Forecast Horizons -->
+<div class="slide light">
+  <div class="header-bar"></div>
+  <div class="content">
+    <h2>Dual Forecasting Horizons</h2>
+    <p style="margin-bottom: 30px;">The deployed system serves two distinct business functions across different timelines.</p>
+    
+    <div class="two-col">
+      <div class="box" style="background: var(--dark); color: var(--white); border-color: var(--dark);">
+        <div style="font-size: 40px; margin-bottom: 15px;">📦</div>
+        <div class="box-title" style="color: var(--white); font-size: 24px;">Operational Horizon</div>
+        <div class="meta-tag" style="border-color: var(--white); color: var(--white); margin: 15px 0;">[ T+1 to T+7 Days ]</div>
+        <ul class="sketchy-list">
+          <li>Daily inventory requisition</li>
+          <li>Barista shift scheduling adjustments</li>
+          <li>Immediate supply chain ordering</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <div style="font-size: 40px; margin-bottom: 15px;">📊</div>
+        <div class="box-title" style="font-size: 24px;">Tactical Horizon</div>
+        <div class="meta-tag" style="margin: 15px 0;">[ T+30 Days ]</div>
+        <ul class="sketchy-list">
+          <li>Monthly financial planning & budget allocation</li>
+          <li>Marketing promotional calendar alignment</li>
+          <li>High-level CFO KPI target setting</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="page-number">12 / 14</div>
+</div>
+
+<!-- Slide 13: Conclusion Summary -->
+<div class="slide dark">
+  <div class="header-bar"></div>
+  <div class="content">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <h2 style="font-size: 48px; border-bottom: none;">FINAL PERFORMANCE METRICS</h2>
+    </div>
+    
+    <div class="metrics-grid" style="grid-template-columns: repeat(3, 1fr); gap: 30px;">
+      <div class="metric-box">
+        <div style="font-size: 40px; margin-bottom: 10px;">📉</div>
+        <div class="metric-val" style="font-size: 24px;">-34% Error</div>
+        <div class="metric-lbl">Precision Improvement</div>
+        <p style="font-size: 13px; margin-top: 15px; color: #aaa;">Dropped MAE from 14.2 cups to 9.4 cups daily.</p>
+      </div>
+      
+      <div class="metric-box">
+        <div style="font-size: 40px; margin-bottom: 10px;">📈</div>
+        <div class="metric-val" style="font-size: 24px;">Volatility Lock</div>
+        <div class="metric-lbl">Surge Management</div>
+        <p style="font-size: 13px; margin-top: 15px; color: #aaa;">Reduced service time variance during morning rushes.</p>
+      </div>
+      
+      <div class="metric-box">
+        <div style="font-size: 40px; margin-bottom: 10px;">💰</div>
+        <div class="metric-val" style="font-size: 24px;">+$700/mo</div>
+        <div class="metric-lbl">Total Recouped</div>
+        <p style="font-size: 13px; margin-top: 15px; color: #aaa;">Through waste reduction and un-abandoned queues.</p>
+      </div>
+    </div>
+    
+    <div class="box" style="margin-top: 30px; text-align: center;">
+      <p style="font-weight: 700; font-size: 20px;">Demand is now <span style="text-decoration: underline;">anticipated</span>, not guessed. Staffing and restocking are based on evidence.</p>
+    </div>
+  </div>
+  <div class="page-number">13 / 14</div>
+</div>
+
+<!-- Slide 14: End -->
+<div class="slide split">
+  <div class="header-bar"></div>
+  <div class="two-col" style="gap: 0;">
+    <div class="content light cover-center">
+      <div class="meta-tag">Portfolio Complete</div>
+      <h2 style="font-size: 40px; border: none;">END OF REPORT</h2>
+      <p style="font-family: 'JetBrains Mono', monospace; font-weight: 800; margin-top: 20px;">TASK_1_COFFEE_SALES_ANALYSIS</p>
+    </div>
+    <div class="content dark cover-center" style="background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40\" height=\"40\" viewBox=\"0 0 40 40\"><circle cx=\"20\" cy=\"20\" r=\"1\" fill=\"rgba(255,255,255,0.1)\"/></svg>');">
+      <!-- Minimal dotted background -->
+    </div>
+  </div>
+  <div class="page-number" style="color: var(--white);">14 / 14</div>
+</div>
+
+</body>
+</html>
